@@ -1,4 +1,5 @@
 pub mod oneshot;
+pub mod queue;
 
 #[derive(Debug)]
 pub enum ActionResult<R> {
@@ -16,6 +17,11 @@ pub trait StopRunner<C: Command> {
     fn get(&self) -> C;
 }
 
+pub trait SimpleStop: Command {
+    fn make_stop_command() -> Self;
+}
+struct SimpleCloser;
+
 /// A command runner's API
 pub trait CommandRunner {
     /// The command it accepts
@@ -27,16 +33,42 @@ pub trait CommandRunner {
 
     fn new() -> Self;
     fn send(&self, cmd: Self::Cmd) -> Self::SendAck;
-    fn close(self, s: impl StopRunner<Self::Cmd>) -> Self::CloseResult;
+    fn close_with(self, s: impl StopRunner<Self::Cmd>) -> Self::CloseResult;
+    fn close(self) -> Self::CloseResult
+    where
+        Self::Cmd: SimpleStop,
+        Self: Sized,
+    {
+        self.close_with(SimpleCloser)
+    }
 
     /// No need to remember to .close the runner if you use scope
-    fn scope(closer: impl StopRunner<Self::Cmd>, f: impl Fn(&Self)) -> Self::CloseResult
+    fn scope_with(closer: impl StopRunner<Self::Cmd>, f: impl Fn(&Self)) -> Self::CloseResult
     where
         Self: Sized,
     {
         let runner = Self::new();
         f(&runner);
-        runner.close(closer)
+        runner.close_with(closer)
+    }
+
+    fn scope(f: impl Fn(&Self)) -> Self::CloseResult
+    where
+        Self: Sized,
+        Self::Cmd: SimpleStop,
+    {
+        let runner = Self::new();
+        f(&runner);
+        runner.close()
+    }
+}
+
+impl<C> StopRunner<C> for SimpleCloser
+where
+    C: SimpleStop,
+{
+    fn get(&self) -> C {
+        C::make_stop_command()
     }
 }
 
