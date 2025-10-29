@@ -71,8 +71,8 @@ pub enum OneShotCloseError<Cmd>
 where
     Cmd: Command,
 {
-    SendError(QueuedCommand<Cmd>),
-    JoinError(Box<dyn Any + Send>),
+    Send(QueuedCommand<Cmd>),
+    Join(Box<dyn Any + Send>),
 }
 
 impl<Cmd> CommandRunner for OneShotAPI<Cmd>
@@ -98,7 +98,7 @@ where
         Ok(rx)
     }
     fn close_with(self, c: impl crate::StopRunner<Self::Cmd>) -> Self::CloseResult {
-        self.send(c.get()).map_err(OneShotCloseError::SendError)?;
-        self.thread.join().map_err(OneShotCloseError::JoinError)
+        self.send(c.get()).map_err(OneShotCloseError::Send)?;
+        self.thread.join().map_err(OneShotCloseError::Join)
     }
 }
