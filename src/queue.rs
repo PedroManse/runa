@@ -3,6 +3,7 @@ use std::any::Any;
 use std::sync::mpsc::{self, Receiver, RecvError, SendError, Sender};
 use std::thread::JoinHandle;
 
+/// Runner that sends responses to a queue
 pub struct QueueRunner<Cmd>
 where
     Cmd: Command,
@@ -38,6 +39,7 @@ where
     }
 }
 
+/// API of [`QueueRunner`]
 pub struct QueueAPI<Cmd>
 where
     Cmd: Command,
@@ -87,9 +89,13 @@ impl<Cmd> QueueAPI<Cmd>
 where
     Cmd: Command,
 {
+    /// # Errors
+    /// An error would occour if the [runner](QueueRunner) was closed but the [api](QueueAPI) was not dropped.
     pub fn recv(&self) -> Result<CmdRst<Cmd>, RecvError> {
         self.recv_res.recv()
     }
+    /// # Errors
+    /// An error would occour if the [runner](QueueRunner) was closed but the [api](QueueAPI) was not dropped.
     pub fn try_recv(&self) -> Result<CmdRst<Cmd>, mpsc::TryRecvError> {
         self.recv_res.try_recv()
     }
