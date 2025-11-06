@@ -1,102 +1,58 @@
-use crate::{ActionResult, CmdRst, Command, CommandRunner};
-use std::any::Any;
-use std::sync::mpsc::{self, Receiver, RecvError, SendError, Sender};
+use crate::{ActionResult, ChanRecv, ChanSend, CmdRst, Command};
+use std::marker::PhantomData;
 use std::thread::JoinHandle;
 
 /// Runner that sends responses to a queue
-pub struct QueueRunner<Cmd>
+pub struct QueueRunner<Cmd, R, S>
 where
     Cmd: Command,
+    R: ChanRecv<Cmd>,
+    S: ChanSend<CmdRst<Cmd>>,
 {
-    recv_cmd: Receiver<Cmd>,
-    send_res: Sender<CmdRst<Cmd>>,
+    pub(crate) d: PhantomData<Cmd>,
+    pub(crate) recv_cmd: R,
+    pub(crate) send_res: S,
 }
 
-impl<Cmd> QueueRunner<Cmd>
+impl<Cmd, S, R> QueueRunner<Cmd, R, S>
 where
     Cmd: Command,
+    R: ChanRecv<Cmd>,
+    S: ChanSend<CmdRst<Cmd>>,
 {
-    fn get(&self) -> Result<Cmd, RecvError> {
-        self.recv_cmd.recv()
+    pub(crate) fn get(&self) -> Result<Cmd, R::Err> {
+        self.recv_cmd.recv_t()
     }
-    fn send(&self, res: CmdRst<Cmd>) -> Result<(), SendError<CmdRst<Cmd>>> {
-        self.send_res.send(res)
+    pub(crate) fn send(&self, res: CmdRst<Cmd>) -> Result<(), S::Err> {
+        self.send_res.send_t(res)
     }
-    fn exec(cmd: Cmd) -> ActionResult<Cmd::Result> {
+    pub(crate) fn exec(cmd: Cmd) -> ActionResult<CmdRst<Cmd>> {
         cmd.execute()
     }
-    fn spawn(recv_cmd: Receiver<Cmd>, send_res: Sender<CmdRst<Cmd>>) -> JoinHandle<Self> {
+}
+
+impl<Cmd, R, S> QueueRunner<Cmd, R, S>
+where
+    Cmd: Command,
+    R: ChanRecv<Cmd> + Send + 'static,
+    S: ChanSend<CmdRst<Cmd>> + Send + 'static,
+    <R as ChanRecv<Cmd>>::Err: std::fmt::Debug,
+    <S as ChanSend<Cmd::Result>>::Err: std::fmt::Debug,
+{
+    pub(crate) fn spawn(recv_cmd: R, send_res: S) -> JoinHandle<Self> {
         std::thread::spawn(|| {
-            let runner = QueueRunner { recv_cmd, send_res };
+            let runner = Self {
+                recv_cmd,
+                send_res,
+                d: PhantomData,
+            };
             loop {
                 let cmd = runner.get().unwrap();
-                let r = QueueRunner::exec(cmd);
+                let r = Self::exec(cmd);
                 let ActionResult::Normal(res) = r else { break };
                 runner.send(res).unwrap();
             }
             runner
         })
-    }
-}
-
-/// API of [`QueueRunner`]
-pub struct QueueAPI<Cmd>
-where
-    Cmd: Command,
-{
-    send_cmd: Sender<Cmd>,
-    recv_res: Receiver<CmdRst<Cmd>>,
-    thread: JoinHandle<QueueRunner<Cmd>>,
-}
-
-#[derive(Debug)]
-pub enum QueueCloseError<Cmd>
-where
-    Cmd: Command,
-{
-    Send(SendError<Cmd>),
-    Join(Box<dyn Any + Send>),
-}
-
-impl<Cmd> CommandRunner for QueueAPI<Cmd>
-where
-    Cmd: Command,
-{
-    type Cmd = Cmd;
-    type SendAck = Result<(), SendError<Cmd>>;
-    type CloseResult = Result<QueueRunner<Cmd>, QueueCloseError<Cmd>>;
-    fn new() -> Self {
-        let (send_cmd, recv_cmd) = mpsc::channel();
-        let (send_res, recv_res) = mpsc::channel();
-        let thread = QueueRunner::spawn(recv_cmd, send_res);
-        QueueAPI {
-            send_cmd,
-            recv_res,
-            thread,
-        }
-    }
-    fn send(&self, cmd: Self::Cmd) -> Self::SendAck {
-        self.send_cmd.send(cmd)
-    }
-    fn close_with(self, s: impl crate::StopRunner<Self::Cmd>) -> Self::CloseResult {
-        let cmd = s.get();
-        self.send_cmd.send(cmd).map_err(QueueCloseError::Send)?;
-        self.thread.join().map_err(QueueCloseError::Join)
-    }
-}
-
-impl<Cmd> QueueAPI<Cmd>
-where
-    Cmd: Command,
-{
-    /// # Errors
-    /// An error would occour if the [runner](QueueRunner) was closed but the [api](QueueAPI) was not dropped.
-    pub fn recv(&self) -> Result<CmdRst<Cmd>, RecvError> {
-        self.recv_res.recv()
-    }
-    /// # Errors
-    /// An error would occour if the [runner](QueueRunner) was closed but the [api](QueueAPI) was not dropped.
-    pub fn try_recv(&self) -> Result<CmdRst<Cmd>, mpsc::TryRecvError> {
-        self.recv_res.try_recv()
     }
 }
