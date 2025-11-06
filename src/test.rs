@@ -1,5 +1,5 @@
-use crate as runa;
-use runa::CommandRunner;
+use crate as supera;
+use supera::CommandRunner;
 
 #[derive(Debug, Clone, Copy)]
 pub enum MathAction {
@@ -7,18 +7,18 @@ pub enum MathAction {
     Stop,
 }
 
-impl runa::SimpleStop for MathAction {
+impl supera::SimpleStop for MathAction {
     fn make_stop_command() -> Self {
         MathAction::Stop
     }
 }
 
-impl runa::Command for MathAction {
+impl supera::Command for MathAction {
     type Result = i32;
-    fn execute(self) -> runa::ActionResult<Self::Result> {
-        runa::ActionResult::Normal(match self {
+    fn execute(self) -> supera::ActionResult<Self::Result> {
+        supera::ActionResult::Normal(match self {
             Self::Sub(a, b) => a - b,
-            Self::Stop => return runa::ActionResult::Stop,
+            Self::Stop => return supera::ActionResult::Stop,
         })
     }
 }
@@ -29,7 +29,7 @@ mod queue {
     fn single_values() {
         const COUNT: usize = 500_000;
         let mut outs = Vec::with_capacity(COUNT);
-        runa::queue_single::SingleQueueAPI::<MathAction>::scope(|q| {
+        supera::queue_single::SingleQueueAPI::<MathAction>::scope(|q| {
             let ma = MathAction::Sub(2, 1);
             for _ in 0..COUNT {
                 q.send(ma).unwrap();
@@ -47,7 +47,7 @@ mod queue {
     fn pool_values() {
         const COUNT: usize = 500_000;
         let mut outs = Vec::with_capacity(COUNT);
-        let rs = runa::queue_pool::PoolQueueAPI::<MathAction, 2>::scope(|q| {
+        let rs = supera::queue_pool::PoolQueueAPI::<MathAction, 2>::scope(|q| {
             let ma = MathAction::Sub(2, 1);
             for _ in 0..COUNT {
                 q.send(ma).unwrap();
@@ -65,7 +65,7 @@ mod queue {
 
     #[test]
     fn single_manual_close() {
-        let rs = runa::queue_single::SingleQueueAPI::new();
+        let rs = supera::queue_single::SingleQueueAPI::new();
         rs.send(MathAction::Sub(3, 2)).unwrap();
         rs.recv().unwrap();
         rs.close().unwrap();
@@ -73,7 +73,7 @@ mod queue {
 
     #[test]
     fn pool_manual_close() {
-        let rs = runa::queue_pool::PoolQueueAPI::<MathAction, 3>::new();
+        let rs = supera::queue_pool::PoolQueueAPI::<MathAction, 3>::new();
         rs.send(MathAction::Sub(3, 2)).unwrap();
         rs.recv().unwrap();
         for r in rs.close().unwrap() {
@@ -87,7 +87,7 @@ mod oneshot {
     #[test]
     fn single_values() {
         const COUNT: usize = 5_000;
-        runa::oneshot_single::OneShotAPI::scope(|q| {
+        supera::oneshot_single::OneShotAPI::scope(|q| {
             for _ in 0..COUNT {
                 let ma = MathAction::Sub(2, 1);
                 let mr = q.send(ma).unwrap();
@@ -101,7 +101,7 @@ mod oneshot {
     #[test]
     fn pool_values() {
         const COUNT: usize = 50_000;
-        let runners = runa::oneshot_pool::OneShotPoolAPI::<MathAction, 10>::scope(|q| {
+        let runners = supera::oneshot_pool::OneShotPoolAPI::<MathAction, 10>::scope(|q| {
             for _ in 0..COUNT {
                 let ma = MathAction::Sub(2, 1);
                 let mr = q.send(ma).unwrap();
@@ -117,7 +117,7 @@ mod oneshot {
 
     #[test]
     fn single_manual_close() {
-        use runa::oneshot_single::OneShotAPI;
+        use supera::oneshot_single::OneShotAPI;
         const COUNT: usize = 2_500;
         let q = OneShotAPI::new();
         for _ in 0..COUNT {
@@ -131,7 +131,7 @@ mod oneshot {
 
     #[test]
     fn pool_manual_close() {
-        use runa::oneshot_pool::OneShotPoolAPI;
+        use supera::oneshot_pool::OneShotPoolAPI;
         const COUNT: usize = 2_500;
         let q = OneShotPoolAPI::<MathAction, 3>::new();
         for _ in 0..COUNT {

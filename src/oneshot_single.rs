@@ -51,4 +51,3 @@ where
         self.thread.join().map_err(OneShotCloseError::Join)
     }
 }
-
