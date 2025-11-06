@@ -1,6 +1,9 @@
 use crossbeam::channel as mpmc;
 use std::sync::mpsc;
 
+#[cfg(test)]
+mod test;
+
 pub mod oneshot;
 pub(crate) mod queue;
 pub mod queue_pool;
@@ -48,7 +51,7 @@ pub trait CommandRunner {
     }
 
     /// No need to remember to .close the runner if you use scope
-    fn scope_with(closer: impl StopRunner<Self::Cmd>, f: impl Fn(&Self)) -> Self::CloseResult
+    fn scope_with(closer: impl StopRunner<Self::Cmd>, f: impl FnOnce(&Self)) -> Self::CloseResult
     where
         Self: Sized,
     {
@@ -57,7 +60,7 @@ pub trait CommandRunner {
         runner.close_with(closer)
     }
 
-    fn scope(f: impl Fn(&Self)) -> Self::CloseResult
+    fn scope(f: impl FnOnce(&Self)) -> Self::CloseResult
     where
         Self: Sized,
         Self::Cmd: SimpleStop,
@@ -77,7 +80,7 @@ where
     }
 }
 
-pub type CmdRst<C> = <C as Command>::Result;
+pub(crate) type CmdRst<C> = <C as Command>::Result;
 
 pub trait ChanSend<T> {
     type Err;

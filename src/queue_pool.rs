@@ -55,14 +55,6 @@ where
         }
         Ok(self.runners.map(std::thread::JoinHandle::join))
     }
-    fn scope_with(closer: impl crate::StopRunner<Self::Cmd>, f: impl Fn(&Self)) -> Self::CloseResult
-    where
-        Self: Sized,
-    {
-        let runner = Self::new();
-        f(&runner);
-        runner.close_with(closer)
-    }
 }
 
 impl<Cmd, const N: usize> PoolQueueAPI<Cmd, N>
