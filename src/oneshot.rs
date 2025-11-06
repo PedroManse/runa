@@ -47,7 +47,10 @@ where
     }
     pub(crate) fn spawn(rx: R) -> JoinHandle<Self> {
         std::thread::spawn(move || {
-            let runner = Self { reqs: rx, d: PhantomData };
+            let runner = Self {
+                reqs: rx,
+                d: PhantomData,
+            };
             loop {
                 let msg = runner.get().unwrap();
                 let r = Self::exec(msg.cmd);
