@@ -18,7 +18,7 @@ impl SimpleStop for MathAction {
 impl Command for MathAction {
     type Result = i32;
     fn execute(self) -> runa::ActionResult<Self::Result> {
-        std::thread::sleep(Duration::from_secs(5));
+        std::thread::sleep(Duration::from_secs(1));
         ActionResult::Normal(match self {
             Self::Sum(a, b) => a + b,
             Self::Sub(a, b) => a - b,
@@ -28,23 +28,23 @@ impl Command for MathAction {
 }
 
 fn main() {
-    runa::oneshot::OneShotAPI::scope(|math_runner| {
-        runa::oneshot::OneShotAPI::scope(|math_runner2| {
+    runa::queue::QueueAPI::scope(|q1| {
+        runa::queue::QueueAPI::scope(|q2| {
             let ma = MathAction::Sum(3, 5);
-            let r0 = math_runner.send(ma).unwrap();
-            let r1 = math_runner.send(ma).unwrap();
-            let r2 = math_runner.send(ma).unwrap();
-            let r3 = math_runner.send(ma).unwrap();
-            let r4 = math_runner.send(ma).unwrap();
-
-            let r5 = math_runner2.send(ma).unwrap();
-            let r6 = math_runner2.send(ma).unwrap();
-            let r7 = math_runner2.send(ma).unwrap();
-            let r8 = math_runner2.send(ma).unwrap();
-            let r9 = math_runner2.send(ma).unwrap();
-            for r in [r0, r5, r1, r6, r2, r7, r3, r8, r4, r9] {
-                dbg!(r.recv().unwrap());
+            q1.send(ma).unwrap();
+            q1.send(ma).unwrap();
+            q2.send(ma).unwrap();
+            q1.send(ma).unwrap();
+            q2.send(ma).unwrap();
+            q1.send(ma).unwrap();
+            q2.send(ma).unwrap();
+            q1.send(ma).unwrap();
+            q2.send(ma).unwrap();
+            for _ in 0..4 {
+                dbg!(q1.recv().unwrap());
+                dbg!(q2.recv().unwrap());
             }
+            std::thread::yield_now();
         })
         .unwrap();
     })
