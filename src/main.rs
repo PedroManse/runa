@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use runa::{ActionResult, Command, CommandRunner, SimpleStop};
 
 #[derive(Debug, Clone, Copy)]
@@ -18,35 +16,34 @@ impl SimpleStop for MathAction {
 impl Command for MathAction {
     type Result = i32;
     fn execute(self) -> runa::ActionResult<Self::Result> {
-        std::thread::sleep(Duration::from_secs(1));
-        ActionResult::Normal(match self {
+        let x = match self {
             Self::Sum(a, b) => a + b,
             Self::Sub(a, b) => a - b,
             Self::Stop => return ActionResult::Stop,
-        })
+        };
+        ActionResult::Normal(x)
     }
 }
 
 fn main() {
-    runa::queue::QueueAPI::scope(|q1| {
-        runa::queue::QueueAPI::scope(|q2| {
-            let ma = MathAction::Sum(3, 5);
-            q1.send(ma).unwrap();
-            q1.send(ma).unwrap();
-            q2.send(ma).unwrap();
-            q1.send(ma).unwrap();
-            q2.send(ma).unwrap();
-            q1.send(ma).unwrap();
-            q2.send(ma).unwrap();
-            q1.send(ma).unwrap();
-            q2.send(ma).unwrap();
-            for _ in 0..4 {
-                dbg!(q1.recv().unwrap());
-                dbg!(q2.recv().unwrap());
-            }
-            std::thread::yield_now();
-        })
-        .unwrap();
+    let rs = runa::queue_pool::PoolQueueAPI::<MathAction, 9>::scope(|q| {
+        let ma = MathAction::Sub(2, 1);
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        q.send(ma).unwrap();
+        for _ in 0..9 {
+            dbg!(q.recv().unwrap());
+        }
+        std::thread::yield_now();
     })
     .unwrap();
+    for r in rs {
+        r.unwrap();
+    }
 }
