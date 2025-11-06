@@ -1,5 +1,8 @@
+use std::sync::mpsc;
+
 pub mod oneshot;
-pub mod queue;
+pub(crate) mod queue;
+pub mod queue_single;
 
 #[derive(Debug)]
 pub enum ActionResult<R> {
@@ -73,3 +76,45 @@ where
 }
 
 pub type CmdRst<C> = <C as Command>::Result;
+
+pub trait ChanSend<T> {
+    type Err;
+    /// # Errors
+    /// associated type to account for send errors
+    fn send_t(&self, t: T) -> Result<(), Self::Err>;
+}
+
+pub trait ChanRecv<T> {
+    type Err;
+    /// # Errors
+    /// associated type to account for recv errors
+    fn recv_t(&self) -> Result<T, Self::Err>;
+}
+
+impl<T> ChanSend<T> for mpsc::Sender<T> {
+    type Err = mpsc::SendError<T>;
+    fn send_t(&self, t: T) -> Result<(), Self::Err> {
+        self.send(t)
+    }
+}
+
+impl<T> ChanRecv<T> for mpsc::Receiver<T> {
+    type Err = mpsc::RecvError;
+    fn recv_t(&self) -> Result<T, Self::Err> {
+        self.recv()
+    }
+}
+
+impl<T> ChanSend<T> for mpmc::Sender<T> {
+    type Err = mpmc::SendError<T>;
+    fn send_t(&self, t: T) -> Result<(), Self::Err> {
+        self.send(t)
+    }
+}
+
+impl<T> ChanRecv<T> for mpmc::Receiver<T> {
+    type Err = mpmc::RecvError;
+    fn recv_t(&self) -> Result<T, Self::Err> {
+        self.recv()
+    }
+}
