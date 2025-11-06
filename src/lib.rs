@@ -1,7 +1,9 @@
+use crossbeam::channel as mpmc;
 use std::sync::mpsc;
 
 pub mod oneshot;
 pub(crate) mod queue;
+pub mod queue_pool;
 pub mod queue_single;
 
 #[derive(Debug)]
