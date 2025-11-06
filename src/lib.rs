@@ -5,6 +5,9 @@ use std::sync::mpsc;
 mod test;
 
 pub mod oneshot;
+pub mod oneshot_pool;
+pub mod oneshot_single;
+
 pub(crate) mod queue;
 pub mod queue_pool;
 pub mod queue_single;
