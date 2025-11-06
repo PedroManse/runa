@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use runa::{ActionResult, Command, CommandRunner, StopRunner};
+use runa::{ActionResult, Command, CommandRunner, SimpleStop};
 
 #[derive(Debug, Clone, Copy)]
 pub enum MathAction {
@@ -9,8 +9,8 @@ pub enum MathAction {
     Stop,
 }
 
-impl StopRunner<MathAction> for () {
-    fn get(&self) -> MathAction {
+impl SimpleStop for MathAction {
+    fn make_stop_command() -> Self {
         MathAction::Stop
     }
 }
@@ -28,8 +28,8 @@ impl Command for MathAction {
 }
 
 fn main() {
-    runa::oneshot::OneShotAPI::scope((), |math_runner| {
-        runa::oneshot::OneShotAPI::scope((), |math_runner2| {
+    runa::oneshot::OneShotAPI::scope(|math_runner| {
+        runa::oneshot::OneShotAPI::scope(|math_runner2| {
             let ma = MathAction::Sum(3, 5);
             let r0 = math_runner.send(ma).unwrap();
             let r1 = math_runner.send(ma).unwrap();

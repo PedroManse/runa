@@ -97,7 +97,7 @@ where
         self.cmd_queue.send(msg).map_err(|e| e.0)?;
         Ok(rx)
     }
-    fn close(self, c: impl crate::StopRunner<Self::Cmd>) -> Self::CloseResult {
+    fn close_with(self, c: impl crate::StopRunner<Self::Cmd>) -> Self::CloseResult {
         self.send(c.get()).map_err(OneShotCloseError::SendError)?;
         self.thread.join().map_err(OneShotCloseError::JoinError)
     }
