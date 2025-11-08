@@ -12,6 +12,9 @@ To acheive that `StopRunner` or `SimpleStop` can be defined.
 `StopRunner` should be used in cases where there's valuable information to be
 passed down to the runner when they are to be halted. Otherwise `SimpleStop` should be used.
 
+If `SimpleStop` is implemented on a command, `StopRunner` is automatically
+implemented on the command it self to simply common use cases.
+
 # Runner
 An async runner can receive a commands and execute them. They are entirely
 implementation-specific and created solely for the Managers.
