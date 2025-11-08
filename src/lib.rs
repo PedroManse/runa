@@ -33,6 +33,15 @@ pub trait SimpleStop: Command {
 }
 struct SimpleCloser;
 
+impl<C> StopRunner<C> for C
+where
+    C: Command + SimpleStop,
+{
+    fn get(&self) -> C {
+        C::make_stop_command()
+    }
+}
+
 /// A command runner's API
 pub trait CommandRunner {
     /// The command it accepts
