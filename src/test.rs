@@ -65,7 +65,7 @@ mod queue {
 
     #[test]
     fn single_manual_close() {
-        let rs = supera::queue_single::SingleQueueAPI::new();
+        let rs = unsafe { supera::queue_single::SingleQueueAPI::new() };
         rs.send(MathAction::Sub(3, 2)).unwrap();
         rs.recv().unwrap();
         rs.close().unwrap();
@@ -73,7 +73,7 @@ mod queue {
 
     #[test]
     fn pool_manual_close() {
-        let rs = supera::queue_pool::PoolQueueAPI::<MathAction, 3>::new();
+        let rs = unsafe { supera::queue_pool::PoolQueueAPI::<MathAction, 3>::new() };
         rs.send(MathAction::Sub(3, 2)).unwrap();
         rs.recv().unwrap();
         for r in rs.close().unwrap() {
@@ -119,7 +119,7 @@ mod oneshot {
     fn single_manual_close() {
         use supera::oneshot_single::OneShotAPI;
         const COUNT: usize = 2_500;
-        let q = OneShotAPI::new();
+        let q = unsafe { OneShotAPI::new() };
         for _ in 0..COUNT {
             let ma = MathAction::Sub(2, 1);
             let mr = q.send(ma).unwrap();
@@ -133,7 +133,7 @@ mod oneshot {
     fn pool_manual_close() {
         use supera::oneshot_pool::OneShotPoolAPI;
         const COUNT: usize = 2_500;
-        let q = OneShotPoolAPI::<MathAction, 3>::new();
+        let q = unsafe { OneShotPoolAPI::<MathAction, 3>::new() };
         for _ in 0..COUNT {
             let ma = MathAction::Sub(2, 1);
             let mr = q.send(ma).unwrap();
