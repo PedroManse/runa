@@ -36,7 +36,7 @@ where
     type SendAck = Result<(), mpmc::SendError<Cmd>>;
     type CloseResult =
         Result<[Result<PoolRunner<Cmd>, Box<dyn Any + Send>>; N], mpmc::SendError<Cmd>>;
-    fn new() -> Self {
+    unsafe fn new() -> Self {
         let (tx_cmd, rx_cmd) = mpmc::unbounded();
         let (tx_res, rx_res) = mpsc::channel();
         let runners = [(); N].map(|()| QueueRunner::spawn(rx_cmd.clone(), tx_res.clone()));

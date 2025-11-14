@@ -32,7 +32,7 @@ where
     type Cmd = Cmd;
     type SendAck = Result<ExternalCommandLink<Cmd>, QueuedCommand<Cmd>>;
     type CloseResult = Result<OneShotRunner<Cmd, SR<Cmd>>, OneShotCloseError<Cmd>>;
-    fn new() -> Self {
+    unsafe fn new() -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
         let thread = OneShotRunner::spawn(rx);
         OneShotAPI {

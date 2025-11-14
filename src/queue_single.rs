@@ -33,7 +33,7 @@ where
     type Cmd = Cmd;
     type SendAck = Result<(), SendError<Cmd>>;
     type CloseResult = Result<QueueRunner<Cmd, SR<Cmd>, SS<Cmd>>, SingleQueueCloseError<Cmd>>;
-    fn new() -> Self {
+    unsafe fn new() -> Self {
         let (send_cmd, recv_cmd) = mpsc::channel();
         let (send_res, recv_res) = mpsc::channel();
         let thread = QueueRunner::spawn(recv_cmd, send_res);

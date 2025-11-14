@@ -24,7 +24,7 @@ where
         [Result<OneShotRunner<Cmd, MR<Cmd>>, Box<dyn Any + Send>>; N],
         mpmc::SendError<QueuedCommand<Cmd>>,
     >;
-    fn new() -> Self {
+    unsafe fn new() -> Self {
         let (tx_cmd, rx_cmd) = mpmc::unbounded::<QueuedCommand<Cmd>>();
         let runners = [(); N].map(|()| OneShotRunner::<Cmd, MR<Cmd>>::spawn(rx_cmd.clone()));
         Self {

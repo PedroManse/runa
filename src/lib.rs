@@ -42,7 +42,13 @@ pub trait CommandRunner {
     /// The result of halting a runner
     type CloseResult;
 
-    fn new() -> Self;
+    /// # Safety
+    /// Since this *should* start another thread, it's only safe to call this is
+    /// [`CommandRunner::close_with`] or [`CommandRunner::close`] are called.
+    ///
+    /// [`CommandRunner::scope_with`] and [`CommandRunner::scope`] always call `close` on the
+    /// runner.
+    unsafe fn new() -> Self;
     fn send(&self, cmd: Self::Cmd) -> Self::SendAck;
     fn close_with(self, s: impl StopRunner<Self::Cmd>) -> Self::CloseResult;
     fn close(self) -> Self::CloseResult
@@ -58,7 +64,7 @@ pub trait CommandRunner {
     where
         Self: Sized,
     {
-        let runner = Self::new();
+        let runner = unsafe { Self::new() };
         f(&runner);
         runner.close_with(closer)
     }
@@ -68,9 +74,7 @@ pub trait CommandRunner {
         Self: Sized,
         Self::Cmd: SimpleStop,
     {
-        let runner = Self::new();
-        f(&runner);
-        runner.close()
+        Self::scope_with(SimpleCloser, f)
     }
 }
 
