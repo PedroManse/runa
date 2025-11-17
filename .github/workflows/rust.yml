@@ -20,3 +20,9 @@ jobs:
       run: ./ci.sh
     - name: Test
       run: cargo test
+  SemVerCheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check semantic versioning
+      uses: obi1kenobi/cargo-semver-checks-action@v2
