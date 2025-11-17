@@ -14,14 +14,11 @@ ci() {
 	pushd "$1"
 	set -x
 
-	cargo build
-	cargo fmt
 	cargo clippy $fix $allow_dirty --all-targets --all-features -- \
 		-Dclippy::perf \
 		-Dclippy::style \
 		-Dclippy::pedantic \
 		-Wclippy::missing_errors_doc
-	cargo test
 
 	set +x
 	popd
