@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 set -ex
-cargo format
+cargo fmt
 cargo check
 cargo build
 cargo test
