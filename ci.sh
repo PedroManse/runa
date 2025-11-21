@@ -7,5 +7,5 @@ cargo build
 cargo test
 
 set +x
-bash lint.sh
+bash lint.sh $@
 set +e
