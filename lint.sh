@@ -15,4 +15,5 @@ cargo clippy $fix $allow_dirty --all-targets --all-features -- \
 	-Dclippy::perf \
 	-Dclippy::style \
 	-Dclippy::pedantic \
+	-Wclippy::unwrap_used \
 	-Wclippy::missing_errors_doc
