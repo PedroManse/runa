@@ -39,6 +39,8 @@ where
     <R as ChanRecv<Cmd>>::Err: std::fmt::Debug,
     <S as ChanSend<Cmd::Result>>::Err: std::fmt::Debug,
 {
+    /// # Panics
+    /// The default runners panic if the channels they're bound to are dropped.
     pub(crate) fn spawn(recv_cmd: R, send_res: S) -> JoinHandle<Self> {
         std::thread::spawn(|| {
             let runner = Self {

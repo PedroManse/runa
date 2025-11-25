@@ -45,6 +45,8 @@ where
     fn exec(cmd: Cmd) -> ActionResult<Cmd::Result> {
         cmd.execute()
     }
+    /// # Panics
+    /// The default runners panic if the channels they're bound to are dropped.
     pub(crate) fn spawn(rx: R) -> JoinHandle<Self> {
         std::thread::spawn(move || {
             let runner = Self {
