@@ -1,6 +1,6 @@
 [package]
 name = "supera"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 authors = [ "Manse <pedromanse@duck.com>" ]
 license = "GPL-3.0"
@@ -10,3 +10,10 @@ repository = "https://github.com/PedroManse/supera"
 [dependencies]
 crossbeam = "0.8.4"
 oneshot = "0.1.11"
+
+[lints.clippy]
+perf = { level = "deny", priority = -1 }
+style = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+unwrap-used = "warn"
+missing-errors-doc = "warn"
