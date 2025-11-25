@@ -25,6 +25,10 @@ impl supera::Command for MathAction {
 
 mod queue {
     use super::*;
+
+    /// # Panics
+    /// The runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn single_values() {
         const COUNT: usize = 500_000;
@@ -43,6 +47,10 @@ mod queue {
         assert_eq!(outs, vec![1; COUNT]);
     }
 
+    /// # Panics
+    /// Runner manager can panic on close.
+    /// Each runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn pool_values() {
         const COUNT: usize = 500_000;
@@ -64,6 +72,9 @@ mod queue {
     }
 
     #[test]
+    /// # Panics
+    /// The runner can panic.
+    /// Sending and receiving the messages can panic.
     fn single_manual_close() {
         let rs = unsafe { supera::queue_single::SingleQueueAPI::new() };
         rs.send(MathAction::Sub(3, 2)).unwrap();
@@ -71,6 +82,10 @@ mod queue {
         rs.close().unwrap();
     }
 
+    /// # Panics
+    /// Runner manager can panic on close.
+    /// Each runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn pool_manual_close() {
         let rs = unsafe { supera::queue_pool::PoolQueueAPI::<MathAction, 3>::new() };
@@ -84,6 +99,9 @@ mod queue {
 
 mod oneshot {
     use super::*;
+    /// # Panics
+    /// The runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn single_values() {
         const COUNT: usize = 5_000;
@@ -98,6 +116,10 @@ mod oneshot {
         .unwrap();
     }
 
+    /// # Panics
+    /// Runner manager can panic on close.
+    /// Each runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn pool_values() {
         const COUNT: usize = 50_000;
@@ -115,6 +137,9 @@ mod oneshot {
         }
     }
 
+    /// # Panics
+    /// The runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn single_manual_close() {
         use supera::oneshot_single::OneShotAPI;
@@ -129,6 +154,10 @@ mod oneshot {
         q.close().unwrap();
     }
 
+    /// # Panics
+    /// Runner manager can panic on close.
+    /// Each runner can panic.
+    /// Sending and receiving the messages can panic.
     #[test]
     fn pool_manual_close() {
         use supera::oneshot_pool::OneShotPoolAPI;
