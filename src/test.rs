@@ -97,6 +97,28 @@ mod queue {
         }
         Ok(())
     }
+
+    #[test]
+    fn return_from_scope() -> Result<(), Box<dyn std::error::Error>> {
+        const COUNT: i32 = 2_500;
+
+        let (rx, out) = supera::queue_pool::PoolQueueAPI::<MathAction, 3>::scope_and(|q| {
+            let ma = MathAction::Sub(2, 1);
+            let mut out = 0;
+            for _ in 0..COUNT {
+                q.send(ma).unwrap();
+            }
+            for _ in 0..COUNT {
+                out += q.recv().unwrap();
+            }
+            out
+        });
+        for r in rx? {
+            r?;
+        }
+        assert_eq!(out, COUNT);
+        Ok(())
+    }
 }
 
 mod oneshot {
