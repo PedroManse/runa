@@ -40,9 +40,13 @@ where
     R: ChanRecv<Cmd>,
     S: ChanSend<CmdRst<Cmd>>,
 {
+    /// # Errors
+    /// Will fail if request can't be received
     pub(crate) fn get(&self) -> Result<Cmd, R::Err> {
         self.recv_cmd.recv_t()
     }
+    /// # Errors
+    /// Will fail if response can't be sent
     pub(crate) fn send(&self, res: CmdRst<Cmd>) -> Result<(), S::Err> {
         self.send_res.send_t(res)
     }

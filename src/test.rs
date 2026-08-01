@@ -1,3 +1,8 @@
+#![allow(
+    clippy::unwrap_used,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc
+)]
 use crate as supera;
 use supera::CommandRunner;
 
@@ -36,12 +41,11 @@ mod queue {
         supera::queue_single::SingleQueueAPI::<MathAction>::scope(|q| {
             let ma = MathAction::Sub(2, 1);
             for _ in 0..COUNT {
-                q.send(ma).unwrap();
+                q.send(ma).expect("Must send");
             }
             for _ in 0..COUNT {
-                outs.push(q.recv().unwrap());
+                outs.push(q.recv().expect("Must recv"));
             }
-            std::thread::yield_now();
         })?;
         assert_eq!(outs, vec![1; COUNT]);
         Ok(())
@@ -97,6 +101,28 @@ mod queue {
         }
         Ok(())
     }
+
+    #[test]
+    fn return_from_scope() -> Result<(), Box<dyn std::error::Error>> {
+        const COUNT: i32 = 2_500;
+
+        let (rx, out) = supera::queue_pool::PoolQueueAPI::<MathAction, 3>::scope_and(|q| {
+            let ma = MathAction::Sub(2, 1);
+            let mut out = 0;
+            for _ in 0..COUNT {
+                q.send(ma)?;
+            }
+            for _ in 0..COUNT {
+                out += q.recv()?;
+            }
+            Ok::<i32, Box<dyn std::error::Error>>(out)
+        });
+        for r in rx? {
+            r?;
+        }
+        assert_eq!(out?, COUNT);
+        Ok(())
+    }
 }
 
 mod oneshot {
@@ -128,8 +154,8 @@ mod oneshot {
         let runners = supera::oneshot_pool::OneShotPoolAPI::<MathAction, 10>::scope(|q| {
             for _ in 0..COUNT {
                 let ma = MathAction::Sub(2, 1);
-                let mr = q.send(ma).unwrap();
-                let r = mr.recv().unwrap();
+                let mr = q.send(ma).expect("Must send");
+                let r = mr.recv().expect("Must recv");
                 assert_eq!(r, 1);
             }
         })?;
@@ -149,8 +175,8 @@ mod oneshot {
         let q = unsafe { OneShotAPI::new() };
         for _ in 0..COUNT {
             let ma = MathAction::Sub(2, 1);
-            let mr = q.send(ma).unwrap();
-            let r = mr.recv().unwrap();
+            let mr = q.send(ma)?;
+            let r = mr.recv()?;
             assert_eq!(r, 1);
         }
         q.close()?;
@@ -168,8 +194,8 @@ mod oneshot {
         let q = unsafe { OneShotPoolAPI::<MathAction, 3>::new() };
         for _ in 0..COUNT {
             let ma = MathAction::Sub(2, 1);
-            let mr = q.send(ma).unwrap();
-            let r = mr.recv().unwrap();
+            let mr = q.send(ma)?;
+            let r = mr.recv()?;
             assert_eq!(r, 1);
         }
         for r in q.close()? {

@@ -70,12 +70,33 @@ pub trait CommandRunner {
         runner.close_with(closer)
     }
 
+    /// No need to remember to .close the runner if you use scope!
+    fn scope_with_and<R>(
+        closer: impl StopRunner<Self::Cmd>,
+        f: impl FnOnce(&Self) -> R,
+    ) -> (Self::CloseResult, R)
+    where
+        Self: Sized,
+    {
+        let runner = unsafe { Self::new() };
+        let r = f(&runner);
+        (runner.close_with(closer), r)
+    }
+
     fn scope(f: impl FnOnce(&Self)) -> Self::CloseResult
     where
         Self: Sized,
         Self::Cmd: SimpleStop,
     {
         Self::scope_with(SimpleCloser, f)
+    }
+
+    fn scope_and<R>(f: impl FnOnce(&Self) -> R) -> (Self::CloseResult, R)
+    where
+        Self: Sized,
+        Self::Cmd: SimpleStop,
+    {
+        Self::scope_with_and(SimpleCloser, f)
     }
 }
 
