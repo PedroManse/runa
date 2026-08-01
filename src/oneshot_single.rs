@@ -21,7 +21,7 @@ pub enum OneShotCloseError<Cmd>
 where
     Cmd: Command,
 {
-    Send(QueuedCommand<Cmd>),
+    Send(mpsc::SendError<QueuedCommand<Cmd>>),
     Join(Box<dyn Any + Send>),
     Worker(OneshotEventLoopError<Cmd>),
 }
@@ -44,7 +44,7 @@ where
     <Cmd as Command>::Result: fmt::Debug,
 {
     type Cmd = Cmd;
-    type SendAck = Result<ExternalCommandLink<Cmd>, QueuedCommand<Cmd>>;
+    type SendAck = Result<ExternalCommandLink<Cmd>, mpsc::SendError<QueuedCommand<Cmd>>>;
     type CloseResult = Result<OneShotRunner<Cmd, SR<Cmd>>, OneShotCloseError<Cmd>>;
     unsafe fn new() -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
@@ -57,7 +57,7 @@ where
     fn send(&self, cmd: Self::Cmd) -> Self::SendAck {
         let (tx, rx) = oneshot::channel();
         let msg = QueuedCommand { cmd, chan: tx };
-        self.cmd_queue.send(msg).map_err(|e| e.0)?;
+        self.cmd_queue.send(msg)?;
         Ok(rx)
     }
     fn close_with(self, mut c: impl crate::StopRunner<Self::Cmd>) -> Self::CloseResult {
