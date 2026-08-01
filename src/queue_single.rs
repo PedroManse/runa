@@ -7,6 +7,7 @@ use std::thread::JoinHandle;
 
 type SR<Cmd> = mpsc::Receiver<Cmd>;
 type SS<Cmd> = mpsc::Sender<CmdRst<Cmd>>;
+type RunnerResult<Cmd> = Result<QueueRunner<Cmd, SR<Cmd>, SS<Cmd>>, QueueEventLoopError>;
 
 /// API of [`QueueRunner`] for managing a single runner
 pub struct SingleQueueAPI<Cmd>
@@ -15,7 +16,7 @@ where
 {
     send_cmd: Sender<Cmd>,
     recv_res: Receiver<CmdRst<Cmd>>,
-    thread: JoinHandle<Result<QueueRunner<Cmd, SR<Cmd>, SS<Cmd>>, QueueEventLoopError>>,
+    thread: JoinHandle<RunnerResult<Cmd>>,
 }
 
 #[derive(Debug)]

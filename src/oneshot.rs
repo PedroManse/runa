@@ -62,6 +62,8 @@ where
     R: ChanRecv<QueuedCommand<Cmd>> + Send + 'static,
     <R as ChanRecv<QueuedCommand<Cmd>>>::Err: std::fmt::Debug,
 {
+    /// # Errors
+    /// Will fail if request can't be received
     fn get(&self) -> Result<QueuedCommand<Cmd>, R::Err> {
         self.reqs.recv_t()
     }

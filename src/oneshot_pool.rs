@@ -4,13 +4,14 @@ use std::thread::JoinHandle;
 use crate::oneshot::{ExternalCommandLink, OneShotRunner, OneshotEventLoopError, QueuedCommand};
 use crate::{Command, CommandRunner};
 type MR<Cmd> = mpmc::Receiver<QueuedCommand<Cmd>>;
+type Runner<Cmd> = Result<OneShotRunner<Cmd, MR<Cmd>>, OneshotEventLoopError<Cmd>>;
 
 pub struct OneShotPoolAPI<Cmd, const N: usize>
 where
     Cmd: Command,
 {
     cmd_queue: mpmc::Sender<QueuedCommand<Cmd>>,
-    runners: [JoinHandle<Result<OneShotRunner<Cmd, MR<Cmd>>, OneshotEventLoopError<Cmd>>>; N],
+    runners: [JoinHandle<Runner<Cmd>>; N],
 }
 
 impl<Cmd, const N: usize> CommandRunner for OneShotPoolAPI<Cmd, N>

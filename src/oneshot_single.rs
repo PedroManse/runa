@@ -6,13 +6,14 @@ use std::thread::JoinHandle;
 use crate::oneshot::{ExternalCommandLink, OneShotRunner, OneshotEventLoopError, QueuedCommand};
 use crate::{Command, CommandRunner};
 type SR<Cmd> = mpsc::Receiver<QueuedCommand<Cmd>>;
+type Runner<Cmd> = Result<OneShotRunner<Cmd, SR<Cmd>>, OneshotEventLoopError<Cmd>>;
 
 pub struct OneShotAPI<Cmd>
 where
     Cmd: Command,
 {
     cmd_queue: mpsc::Sender<QueuedCommand<Cmd>>,
-    thread: JoinHandle<Result<OneShotRunner<Cmd, SR<Cmd>>, OneshotEventLoopError<Cmd>>>,
+    thread: JoinHandle<Runner<Cmd>>,
 }
 
 #[derive(Debug)]
