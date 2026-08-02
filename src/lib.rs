@@ -9,9 +9,13 @@ pub mod oneshot;
 pub mod oneshot_pool;
 pub mod oneshot_single;
 
-pub(crate) mod queue;
+pub mod queue;
 pub mod queue_pool;
 pub mod queue_single;
+
+pub mod fnf;
+pub mod fnf_pool;
+pub mod fnf_single;
 
 #[derive(Debug)]
 pub enum ActionResult<Rst> {

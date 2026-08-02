@@ -12,6 +12,12 @@ pub enum MathAction {
     Stop,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum FnFMathAction {
+    Sub,
+    Stop,
+}
+
 impl supera::SimpleStop for MathAction {
     fn make_stop_command() -> Self {
         MathAction::Stop
@@ -25,6 +31,23 @@ impl supera::Command for MathAction {
             Self::Sub(a, b) => a - b,
             Self::Stop => return supera::ActionResult::Stop,
         })
+    }
+}
+
+impl supera::SimpleStop for FnFMathAction {
+    fn make_stop_command() -> Self {
+        FnFMathAction::Stop
+    }
+}
+
+impl supera::Command for FnFMathAction {
+    type Result = ();
+    fn execute(self) -> supera::ActionResult<()> {
+        std::thread::sleep(std::time::Duration::from_millis(50));
+        match self {
+            Self::Sub => supera::ActionResult::Normal(()),
+            Self::Stop => supera::ActionResult::Stop,
+        }
     }
 }
 
@@ -202,5 +225,33 @@ mod oneshot {
             r?;
         }
         Ok(())
+    }
+}
+
+mod fnf {
+    use super::*;
+    #[test]
+    fn pool() {
+        use supera::fnf_pool::PoolFnFAPI;
+        const THREAD_COUNT: usize = 1022;
+        const COUNT: usize = THREAD_COUNT * 40;
+        let _ = PoolFnFAPI::<_, THREAD_COUNT>::scope(|pool| {
+            for _ in 0..COUNT {
+                pool.send(FnFMathAction::Sub).unwrap();
+            }
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn single() {
+        use supera::fnf_single::SingleFnFAPI;
+        const COUNT: usize = 120;
+        let _ = SingleFnFAPI::scope(|pool| {
+            for _ in 0..COUNT {
+                pool.send(FnFMathAction::Sub).unwrap();
+            }
+        })
+        .unwrap();
     }
 }
