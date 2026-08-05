@@ -42,7 +42,7 @@ where
     pub(crate) fn get(&self) -> Result<Cmd, R::Err> {
         self.recv_cmd.recv_t()
     }
-    pub(crate) fn exec(cmd: Cmd) -> ActionResult<()> {
+    pub(crate) fn exec(cmd: Cmd) -> ActionResult<Cmd> {
         cmd.execute()
     }
 }

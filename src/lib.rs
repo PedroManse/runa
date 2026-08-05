@@ -18,14 +18,15 @@ pub mod fnf_pool;
 pub mod fnf_single;
 
 #[derive(Debug)]
-pub enum ActionResult<Rst> {
-    Normal(Rst),
+pub enum ActionResult<Cmd: Command> {
+    Next(Cmd),
+    Normal(<Cmd as Command>::Result),
     Stop,
 }
 
-pub trait Command: Send + Sync + 'static {
+pub trait Command: Sized + Send + Sync + 'static {
     type Result: Send + fmt::Debug;
-    fn execute(self) -> ActionResult<Self::Result>;
+    fn execute(self) -> ActionResult<Self>;
 }
 
 /// Creates a command that would halt the command runner>

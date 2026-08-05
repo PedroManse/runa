@@ -26,7 +26,7 @@ impl supera::SimpleStop for MathAction {
 
 impl supera::Command for MathAction {
     type Result = i32;
-    fn execute(self) -> supera::ActionResult<i32> {
+    fn execute(self) -> supera::ActionResult<MathAction> {
         supera::ActionResult::Normal(match self {
             Self::Sub(a, b) => a - b,
             Self::Stop => return supera::ActionResult::Stop,
@@ -42,7 +42,7 @@ impl supera::SimpleStop for FnFMathAction {
 
 impl supera::Command for FnFMathAction {
     type Result = ();
-    fn execute(self) -> supera::ActionResult<()> {
+    fn execute(self) -> supera::ActionResult<FnFMathAction> {
         std::thread::sleep(std::time::Duration::from_millis(50));
         match self {
             Self::Sub => supera::ActionResult::Normal(()),
